@@ -48,6 +48,18 @@ def merge_sort(u):
 
     return ordered_merge(head, tail)
         
+#Question 6
+def merge_sort(u):
+    if len(u) == 1:
+        return u
+    mid = len(u) // 2
+
+    head = merge_sort(u[0:mid])
+    tail = merge_sort(u[mid:])
+
+    return merge(head, tail)
+    
+
 
 def main():
     u = [15,40,45]
