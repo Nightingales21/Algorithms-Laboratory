@@ -1,3 +1,5 @@
+**Question 1
+#+begin_src python
 def partition1(a, low, high):
     pivot = a[high]
     i = low
@@ -11,8 +13,9 @@ def partition1(a, low, high):
             a[i], a[j] = a[j], a[i]
 
     return i
+#+end_src
 
-
+#+begin_src python
 def partition(a, low, high):
     pivot = a[high]
     i = low
@@ -26,7 +29,10 @@ def partition(a, low, high):
             a[i], a[j] = a[j], a[i]
     a[i], a[high] = a[high], a[i]
     return i
+#+end_src
 
+**Question 2
+#+begin_src python
 def qsort(a, low, high):
     if low > high:                     
         return a
@@ -34,7 +40,12 @@ def qsort(a, low, high):
     qsort(a, low, p - 1)
     qsort(a, p + 1, high)           
     return a
+#+end_src
 
+**Algorithm analysis: If given a list of n numbers, qsort has T(n): 2T(n-1) + T(n^2). This simplifies to O(n log n)    
+
+**Question 3
+#+begin_src python
 def bruteforce(nuts, bolts):
     matches = {}
 
@@ -45,7 +56,9 @@ def bruteforce(nuts, bolts):
                 break
 
     return matches
+#+end_src
 
+#+begin_src python
 def partition_modified(arr, low, high, pivot):
     i = low
 
@@ -58,12 +71,16 @@ def partition_modified(arr, low, high, pivot):
 
     arr[i], arr[high] = arr[high], arr[i]
     return i
+#+end_src
 
+#+begin_src python
 def partition_nuts_and_bolts(nuts, bolts, low, high):
     pivot_index = partition_modified(nuts, low, high, bolts[high])
     partition_modified(bolts, low, high, nuts[pivot_index])
     return pivot_index
+#+end_src
 
+#+begin_src python
 def match_nuts_bolts(nuts, bolts, low, high):
     if low >= high:
         return
