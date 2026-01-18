@@ -1,6 +1,127 @@
-#+begin_src python: results output
+
+#+begin_src python
+import itertools
+
+def Safe(Y, k, n, X):
+    if k == n:
+        print(Y)
+        return
+
+    for i in range(n):
+        if not X[i]:
+            X[i] = True
+            Y[k] = i
+            Safe(Y, k + 1, n, X)
+            X[i] = False 
+
+
 def Permute(n):
-     set = []
-     for i in range(len(n)):
-          print( [i] + Permute(n[i+1:]))
+    Y = [0] * n
+    X = [False] * n
+    Safe(Y, 0, n, X)
 #+end_src
+
+* Safety Check for N-Queens
+
+#+begin_src python
+def is_safe(Y, k, r, c):
+    for i in range(k):
+        if Y[i] == c:
+            return False
+        if abs(i - r) == abs(Y[i] - c):
+            return False
+    return True
+#+end_src
+
+* Brute Force Search for 4-Queens
+
+#+begin_src python
+def Search():
+    solutions = []
+    cs = [0, 1, 2, 3]
+
+    for perm in itertools.permutations(cs):
+        safe = True
+        for r in range(4):
+            if not is_safe(perm, r, r, perm[r]):
+                safe = False
+                break
+        if safe:
+            solutions.append(perm)
+
+    print("Safe configurations:")
+    for s in solutions:
+        print(s)
+#+end_src
+
+* Backtracking Solution for N-Queens
+
+#+begin_src python
+def PlaceQueens(Y, r, n):
+    if r == n:
+        print("Safe configuration:", Y)
+        return
+
+    for c in range(n):
+        if is_safe(Y, r, r, c):
+            Y[r] = c
+            PlaceQueens(Y, r + 1, n)
+#+end_src
+
+* Exhaustive Enumeration of Subsets
+
+#+begin_src python
+def exhaustive_enumerate(n):
+    def solve(choice, k):
+        if k == n:
+            subset = []
+            for i in range(n):
+                if choice[i] == 1:
+                    subset.append(i)
+            print(subset)
+            return
+
+        choice[k] = 0
+        solve(choice, k + 1)
+
+        choice[k] = 1
+        solve(choice, k + 1)
+
+    solve([0] * n, 0)
+#+end_src
+
+* Backtracking for Optimization
+
+**Algorithm 1: Subset Sum – Exact Match**
+1. Start with an empty subset and a total sum of 0.
+2. Begin from the first element of the set.
+3. For each element, make two choices:
+   - Include the element in the subset.
+   - Exclude the element from the subset.
+4. After each choice, move to the next element and update the total sum.
+5. If the total sum becomes exactly *W*:
+   - Print the current subset.
+   - Stop exploring this path further.
+6. If the total sum exceeds *W* or all elements have been considered:
+   - Stop exploring that path.
+7. Continue this process until all possible subsets have been explored.
+
+**Output**
+
+All subsets whose sum is exactly equal to *W*.
+
+
+**Algorithm 2: Maximum Weight Subset (Capacity W)**
+1. Start with an empty subset and a total sum of 0.
+2. Keep track of the best sum found so far.
+3. Begin from the first element of the set.
+4. For each element, make two choices:
+   - Include the element only if the total does not exceed *W*.
+   - Exclude the element.
+5. After each choice, move to the next element.
+6. Update the best sum whenever a better valid total is found.
+7. Stop when all elements have been considered.
+
+**Output**
+
+The maximum subset sum that does not exceed *W*.
