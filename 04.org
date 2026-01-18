@@ -1,0 +1,6 @@
+#+begin_src python: results output
+def Permute(n):
+     set = []
+     for i in range(len(n)):
+          print( [i] + Permute(n[i+1:]))
+#+end_src
