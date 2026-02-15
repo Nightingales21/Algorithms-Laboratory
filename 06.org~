@@ -1,0 +1,66 @@
+*Assignment 6: Kruskal’s Algorithm
+**Question 1:
+
+#+begin_src python
+class UnionFind:
+     def __init__(self, n):
+          self.parent = [-1] * (n+1)
+	  self.count = n
+
+     def find(self, e):
+          current = e
+	  while self.parent[current] != -1:
+	       current = self.current[current]
+	  return current
+
+     def union(self, e1, e2):
+          root1 = self.find(e1)
+	  root2 = self.find(e2)
+
+	  if root1 != root2:
+	       self.parent[root1] = root2
+	       self.count -= 1
+#+end_src
+
+#+begin_src python
+import heapq
+
+class PriorityQ:
+    def __init__(self):
+        self.heap = [] 
+
+    def is_empty(self):
+        return len(self.heap) == 0
+
+    def add(self, weight, u, v):
+       heapq.heappush(self.heap, (weight, u, v))
+
+    def remove(self):
+       return heapq.heappop(self.heap)
+#+end_src
+
+#+begin_src python
+def kruskals_algorithm(num_vertices, edges):
+     mst = []
+    total_cost = 0
+    
+    pq = PriorityQ()
+    for u, v, weight in edges:
+        pq.add(weight, u, v)
+        
+    uf = UnionFind(num_vertices)
+    
+    while not pq.is_empty() and len(mst) < num_vertices - 1:
+        weight, u, v = pq.remove()
+        
+        root_u = uf.find(u)
+        root_v = uf.find(v)
+        
+        if root_u != root_v:
+            uf.union(root_u, root_v)
+            mst.append((u, v, weight))
+            total_cost += weight
+            
+    return mst, total_cost
+#+end_src
+
