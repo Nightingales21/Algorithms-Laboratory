@@ -1,0 +1,142 @@
+#+TITLE: Session 7: Iterative Improvement — Stable Matching
+
+* Stable Matching (Gale-Shapley Algorithm)
+
+Find a stable matching between men and women given their preference lists.
+
+** Part 1: Data Structures and Stability Test
+
+#+BEGIN_SRC python :results output
+# Men's prefs: list (preserves proposal order)
+# Women's prefs: rank map for O(1) comparison
+men_prefs   = {'a': ['r', 'q', 's'], 'b': ['s', 'q', 'r'], 'c': ['q', 'r', 's']}
+women_prefs = {'q': ['a', 'c', 'b'], 'r': ['c', 'a', 'b'], 's': ['a', 'b', 'c']}
+
+women_ranks = {w: {m: i for i, m in enumerate(prefs)}
+               for w, prefs in women_prefs.items()}
+
+def is_unstable(m, w, matching):
+    """Return True if (m, w) is a blocking pair."""
+    m_partner = matching[m]
+    w_partner = next(k for k, v in matching.items() if v == w)
+    m_prefers_w = men_prefs[m].index(w) < men_prefs[m].index(m_partner)
+    w_prefers_m = women_ranks[w][m] < women_ranks[w][w_partner]
+    return m_prefers_w and w_prefers_m
+
+matching = {'a': 'q', 'b': 'r', 'c': 's'}
+print("Matching:", matching)
+print("Is (a, r) unstable?", is_unstable('a', 'r', matching))
+#+END_SRC
+
+** Part 2: Modified Data Structures
+
+#+BEGIN_SRC python :results output
+def init_structures(m_prefs, w_prefs):
+    men = {m: {'prefs': p, 'match': None, 'next_idx': 0}
+           for m, p in m_prefs.items()}
+    women = {w: {'match': None,
+                 'rank_map': {m: i for i, m in enumerate(p)}}
+             for w, p in w_prefs.items()}
+    return men, women
+
+men, women = init_structures(men_prefs, women_prefs)
+print("Men initialized:", {m: d['match'] for m, d in men.items()})
+print("Women initialized:", {w: d['match'] for w, d in women.items()})
+#+END_SRC
+
+** Part 3: Proposal Functions
+
+#+BEGIN_SRC python :results output
+def propose(men, m):
+    """Man m proposes to his next preferred woman."""
+    w = men[m]['prefs'][men[m]['next_idx']]
+    men[m]['next_idx'] += 1
+    return w
+
+def withdraw_proposal(men, m):
+    men[m]['match'] = None
+
+def accept_proposal(men, women, m, w):
+    women[w]['match'] = m
+    men[m]['match'] = w
+
+def reject_proposal(men, women, free_men, w):
+    """Woman w rejects her current match; he becomes free."""
+    rejected = women[w]['match']
+    if rejected:
+        men[rejected]['match'] = None
+        free_men.append(rejected)
+    women[w]['match'] = None
+#+END_SRC
+
+** Part 4: Gale-Shapley Algorithm
+
+#+BEGIN_SRC python :results output
+def gale_shapley(m_prefs, w_prefs):
+    men, women = init_structures(m_prefs, w_prefs)
+    free_men = list(m_prefs.keys())
+    iteration = 1
+
+    while free_men:
+        m = free_men.pop(0)
+        w = propose(men, m)
+        current = women[w]['match']
+
+        if current is None:
+            accept_proposal(men, women, m, w)
+        elif women[w]['rank_map'][m] < women[w]['rank_map'][current]:
+            reject_proposal(men, women, free_men, w)
+            accept_proposal(men, women, m, w)
+        else:
+            free_men.append(m)
+
+        state = {m: d['match'] for m, d in men.items()}
+        print(f"Iteration {iteration}: {state}")
+        iteration += 1
+
+    print("\nFinal Stable Matching:")
+    print({m: d['match'] for m, d in men.items()})
+
+gale_shapley(men_prefs, women_prefs)
+#+END_SRC
+
+** Part 5: Read Preferences from File
+
+#+BEGIN_SRC python :results output
+def load_from_file(filename):
+    m_prefs, w_prefs = {}, {}
+    target = m_prefs
+    with open(filename, 'r') as f:
+        for line in f:
+            parts = line.split()
+            if not parts:
+                target = w_prefs
+                continue
+            target[parts[0]] = parts[1:]
+    return m_prefs, w_prefs
+
+# --- Write sample file and run ---
+sample = """a u r t s
+b r t u s
+c t u s r
+d u r t s
+
+r a c d b
+s d a b c
+t c b d a
+u b d c a
+"""
+with open('prefs.txt', 'w') as f:
+    f.write(sample)
+
+m_p, w_p = load_from_file('prefs.txt')
+print("Loaded men:", m_p)
+print("Loaded women:", w_p)
+print()
+gale_shapley(m_p, w_p)
+#+END_SRC
+
+#+RESULTS:
+: Loaded men: {'a': ['u', 'r', 't', 's'], 'b': ['r', 't', 'u', 's'], 'c': ['t', 'u', 's', 'r'], 'd': ['u', 'r', 't', 's']}
+: Loaded women: {'r': ['a', 'c', 'd', 'b'], 's': ['d', 'a', 'b', 'c'], 't': ['c', 'b', 'd', 'a'], 'u': ['b', 'd', 'c', 'a']}
+: 

@@ -1,13 +1,12 @@
 class UnionFind:
     def __init__(self, n):
-        # Assuming vertices are 1-indexed based on your input
         self.parent = list(range(n + 1))
         self.rank = [0] * (n + 1)
         self.count = n
 
     def find(self, e):
         if self.parent[e] != e:
-            self.parent[e] = self.find(self.parent[e]) # Path compression
+            self.parent[e] = self.find(self.parent[e]) 
         return self.parent[e]
 
     def union(self, e1, e2):
@@ -24,23 +23,6 @@ class UnionFind:
             self.count -= 1
             return True
         return False
-
-def union(self, e1, e2):
-    root1 = self.find(e1)
-    root2 = self.find(e2)
-
-    if root1 != root2:
-        if self.rank[root1] > self.rank[root2]:
-            self.parent[root2] = root1
-        elif self.rank[root1] < self.rank[root2]:
-            self.parent[root1] = root2
-        else:
-            self.parent[root2] = root1
-            self.rank[root1] += 1
-        
-        self.count -= 1
-        return True
-    return False
 
 import heapq
 

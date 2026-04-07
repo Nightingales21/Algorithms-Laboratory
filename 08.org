@@ -1,0 +1,174 @@
+#+TITLE: Session 8: Iterative Improvement — Maximum Network Flow
+
+* Maximum Network Flow
+
+Compute the maximum flow in a directed flow network using the *Ford-Fulkerson* algorithm with DFS-based augmenting path search.
+
+** Part 1: Read and Represent the Flow Network
+
+#+BEGIN_SRC python :results output :session my-session
+import collections
+
+def read_graph(file_path):
+    with open(file_path, 'r') as f:
+        lines = [line.strip() for line in f if line.strip()]
+    num_v = int(lines[0])
+    num_e = int(lines[1])
+    adj = collections.defaultdict(dict)
+    for i in range(2, 2 + num_e):
+        u, v, cap = map(int, lines[i].split())
+        adj[u][v] = cap
+    source = int(lines[-2])
+    sink   = int(lines[-1])
+    return adj, num_v, source, sink
+
+# --- Sample data written to file for demonstration ---
+sample = """6
+8
+0 1 16
+0 2 13
+1 2 10
+1 3 12
+2 1 4
+2 4 14
+3 5 20
+4 5 4
+0
+5"""
+with open('flow_data.txt', 'w') as f:
+    f.write(sample)
+
+graph, num_v, source, sink = read_graph('flow_data.txt')
+
+print(f"Vertices: {num_v}, Source: {source}, Sink: {sink}")
+print("Input Network (u -> v: capacity):")
+for u, edges in graph.items():
+    for v, cap in edges.items():
+        print(f"  {u} -> {v}: {cap}")
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+Vertices: 6, Source: 0, Sink: 5
+Input Network (u -> v: capacity):
+  0 -> 1: 16
+  0 -> 2: 13
+  1 -> 2: 10
+  1 -> 3: 12
+  2 -> 1: 4
+  2 -> 4: 14
+  3 -> 5: 20
+  4 -> 5: 4
+#+end_example
+
+** Part 2: Residual Graph and Augmenting Path (DFS)
+
+#+BEGIN_SRC python :results output :session my-session
+def build_residual(graph):
+    res = collections.defaultdict(dict)
+    for u in graph:
+        for v, cap in graph[u].items():
+            res[u][v] = cap
+            if u not in res[v]:
+                res[v][u] = 0
+    return res
+
+def find_path_dfs(res, u, sink, visited, path):
+    if u == sink:
+        return path
+    visited.add(u)
+    for v, cap in res[u].items():
+        if v not in visited and cap > 0:
+            result = find_path_dfs(res, v, sink, visited, path + [(u, v)])
+            if result:
+                return result
+    return None
+
+residual = build_residual(graph)
+path = find_path_dfs(residual, source, sink, set(), [])
+
+print("Augmenting path found:")
+print(" -> ".join([str(source)] + [str(v) for u, v in path]))
+print("Residual capacities along path:")
+for u, v in path:
+    print(f"  {u} -> {v}: {residual[u][v]}")
+#+END_SRC
+
+#+RESULTS:
+: Augmenting path found:
+: 0 -> 1 -> 2 -> 4 -> 5
+: Residual capacities along path:
+:   0 -> 1: 16
+:   1 -> 2: 10
+:   2 -> 4: 14
+:   4 -> 5: 4
+
+** Part 3: Augment the Flow
+
+#+BEGIN_SRC python :results output :session my-session
+def augment(residual, path):
+    bottleneck = min(residual[u][v] for u, v in path)
+    for u, v in path:
+        residual[u][v] -= bottleneck
+        residual[v][u] += bottleneck
+    return bottleneck
+
+residual = build_residual(graph)
+path = find_path_dfs(residual, source, sink, set(), [])
+bottleneck = augment(residual, path)
+
+path_str = " -> ".join([str(source)] + [str(v) for u, v in path])
+print(f"Path: {path_str}")
+print(f"Bottleneck: {bottleneck}")
+print("Updated residual graph:")
+for u in sorted(residual):
+    for v, cap in sorted(residual[u].items()):
+        if cap > 0:
+            print(f"  {u} -> {v}: {cap}")
+#+END_SRC
+
+#+RESULTS:
+#+begin_example
+Path: 0 -> 1 -> 2 -> 4 -> 5
+Bottleneck: 4
+Updated residual graph:
+  0 -> 1: 12
+  0 -> 2: 13
+  1 -> 0: 4
+  1 -> 2: 6
+  1 -> 3: 12
+  2 -> 1: 8
+  2 -> 4: 10
+  3 -> 5: 20
+  4 -> 2: 4
+  5 -> 4: 4
+#+end_example
+
+** Part 4: Compute Maximum Flow (Ford-Fulkerson)
+
+#+BEGIN_SRC python :results output :session my-session 
+def max_flow(graph, source, sink):
+    residual = build_residual(graph)
+    total = 0
+    iteration = 1
+    while True:
+        path = find_path_dfs(residual, source, sink, set(), [])
+        if not path:
+            break
+        bottleneck = augment(residual, path)
+        total += bottleneck
+        path_str = " -> ".join([str(source)] + [str(v) for u, v in path])
+        print(f"Iteration {iteration}: Path: {path_str} | Flow added: {bottleneck}")
+        iteration += 1
+    print(f"\nTotal Maximum Flow: {total}")
+    return total
+
+graph, num_v, source, sink = read_graph('flow_data.txt')
+max_flow(graph, source, sink)
+#+END_SRC
+
+#+RESULTS:
+: Iteration 1: Path: 0 -> 1 -> 2 -> 4 -> 5 | Flow added: 4
+: Iteration 2: Path: 0 -> 1 -> 3 -> 5 | Flow added: 12
+: 
+: Total Maximum Flow: 16

@@ -1,0 +1,71 @@
+#Question 1
+a = ['r', 'q', 's']
+b = ['s', 'q', 'r']
+ c = ['q', 'r', 's']
+
+q = ['a', 'c', 'b']
+r = ['c', 'a', 'b']
+s = ['a', 'b', 'c']
+
+matching = {'a': 'q', 'b': 'r', 'c': 's'}
+
+mprefs = {'a': a, 'b': b, 'c': c}
+wprefs = {'q': q, 'r': r, 's': s}
+
+def is_unstable(m, w, currmatch, mprefs, wprefs):
+    currw = currmatch[m]
+
+    currm = ''
+    for man, women in currmatch.items():
+        if women == w:
+            currm = man
+            break
+
+    m_wants_to_switch = mprefs[m].index(w) < mprefs[m].index(currw)
+    w_wants_to_switch = wprefs[w].index(m) < wprefs[w].index(currm)
+
+    return m_wants_to_switch and w_wants_to_switch
+
+#Question 2
+men = {
+    'a': {'prefs': ['r', 'q', 's'], 'match': None},
+    'b': {'prefs': ['s', 'q', 'r'], 'match': None},
+    'c': {'prefs': ['q', 'r', 's'], 'match': None}
+}
+
+women = {
+    'q': {'prefs': ['a', 'c', 'b'], 'match': None},
+    'r': {'prefs': ['c', 'a', 'b'], 'match': None},
+    's': {'prefs': ['a', 'b', 'c'], 'match': None}
+}
+
+#Question 3
+def propose(m):
+    target_woman = men[m]['prefs'][0]
+    print(f"Man {m} proposed to woman {target_woman}")
+    men[m]['match'] = target_woman
+
+def withdraw_proposal(m):
+    target_woman = men[m]['match']
+    print(f"Man {m} withdraws proposal to woman {target_woman}")
+    men[m]['match'] = None
+
+def accept_proposal(m, w):
+    print(f"Woman {w} accepts {m}'s proposal")
+    women[w]['match'] = m
+
+def reject_proposal(w):
+    m = women[w]['match']
+    if m is not None:
+        print(f"Woman {w} rejects {m}'s proposal")
+        men[m]['match'] = None   
+        women[w]['match'] = None
+
+#Question 4: Gayle-Shapeley
+for man in men:
+    propose(man)
+    if is_unstable(man, man['match'], matching, man['prefs'], woman[man['match']]['prefs']):
+        #Ref do sum
+    else:
+        
+    
